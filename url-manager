@@ -1,80 +1,37 @@
 #!/bin/bash
-
+# WARNING: Functions addData(), removeData() and dataIndex() are dependent on the position of the data array (below)
 data=(
 "/data"
 )
 
-file=$0
-
-addData() {
-    local top="$(head -n +3 $file)"
-    local middle="$@"
-    local bottom="$(tail -n +4 $file)"
-    echo "$top"     > $file
-    echo "$middle" >> $file
-    echo "$bottom" >> $file
-}
-
-<< "addData()"
-newData="\"\" \"\" \"\" \\"
-addData $newData
-addData()
-
+<< "Debug"
 notify() {
     zenity --notification --text="$1"
 }
+Debug
 
-<< "notify()"
-notify $file
-notify()
-
-listData() {
-    local i=0
-    list=()
-    for elem in "${data[@]}"
-    do
-        if [ ! $(($i % 4)) -eq 0 ]
-        then
-            list+=("$elem")
-        fi
-        ((i++))
-    done
-}
-
-<< "listData()"
-listData
-notify ${#list[@]}
-listData()
-
-createListWindow() {
-    listData
-    zenity --list                       \
-           --radiolist\
-           --title        "URL Manager" \
-           --text         "List of Keys"\
-           --column       ""\
-           --column       Key           \
-           --column       Description   \
-           "${list[@]}"                 \
-           --print-column ALL           \
-           --cancel-label Back          \
-           --ok-label     Remove        \
-           --extra-button Add
-}
+script=$0
 
 update() {
     sleep 0.1s
-    $file "updated"
+    $script "updated"
 }
 
-<< "update()"
-notify $1
-button=$( createListWindow )
-if [ $button = "Add" ]
-then
-    addData "FALSE" "\"https://www.google.com/\" \"G\" \"google\" \\" & update
-fi
-update()
+addData() {
+    local top="$(head -n +3 $script)"
+    local middle="$@"
+    local bottom="$(tail -n +4 $script)"
+    echo "$top"     > $script
+    echo "$middle" >> $script
+    echo "$bottom" >> $script
+}
+
+removeData() {
+    if [ $1 ]
+    then
+        echo "$(sed $1d $script)" > $script
+    fi
+}
 
 dataIndex() {
     listData
@@ -96,33 +53,6 @@ dataIndex() {
     done
 }
 
-<< "dataIndex()"
-id=$( createListWindow )
-status=$?
-if [ $status -eq 0 ]
-then
-    index=$( dataIndex $id )
-    notify $index
-fi
-dataIndex()
-
-removeData() {
-    if [ $1 ]
-    then
-        echo "$(sed $1d $file)" > $file
-    fi
-}
-
-<< "removeData()"
-id=$( createListWindow )
-status=$?
-if [ $status -eq 0 ]
-then
-    index=$( dataIndex $id )
-    removeData $index & update
-fi
-removeData()
-
 createEntryWindow() {
     zenity --entry                     \
            --title        "URL Manager"\
@@ -133,20 +63,43 @@ createEntryWindow() {
            --extra-button Edit
 }
 
-openEditWindow() {
-    value=$( createListWindow )
-    status=$?
+listData() {
+    local i=0
+    list=()
+    for elem in "${data[@]}"
+    do
+        if [ ! $(($i % 4)) -eq 0 ]
+        then
+            list+=("$elem")
+        fi
+        ((i++))
+    done
+}
 
-    if [ "$value" = "Add" ]
-    then
-        openAddWindow
-    elif [ "$status" = "0" ]
-    then
-        index=$( dataIndex "$value" )
-        removeData $index & update
-    else
-        openMainWindow
-    fi
+createListWindow() {
+    listData
+    zenity --list                       \
+           --radiolist\
+           --title        "URL Manager" \
+           --text         "List of Keys"\
+           --column       ""\
+           --column       Key           \
+           --column       Description   \
+           "${list[@]}"                 \
+           --print-column ALL           \
+           --cancel-label Back          \
+           --ok-label     Remove        \
+           --extra-button Add
+}
+
+creatFormsWindow() {
+    zenity --forms                  \
+           --title     "URL Manager"\
+	       --text      ""           \
+           --separator "\" \""      \
+           --add-entry URL          \
+           --add-entry Key          \
+           --add-entry Description
 }
 
 openURL() {
@@ -180,14 +133,20 @@ openMainWindow() {
     fi
 }
 
-creatFormsWindow() {
-    zenity --forms                  \
-           --title     "URL Manager"\
-	       --text      ""           \
-           --separator "\" \""      \
-           --add-entry URL          \
-           --add-entry Key          \
-           --add-entry Description
+openEditWindow() {
+    value=$( createListWindow )
+    status=$?
+
+    if [ "$value" = "Add" ]
+    then
+        openAddWindow
+    elif [ "$status" = "0" ]
+    then
+        index=$( dataIndex "$value" )
+        removeData $index & update
+    else
+        openMainWindow
+    fi
 }
 
 openAddWindow() {
@@ -202,7 +161,7 @@ openAddWindow() {
     fi
 }
 
-if [ $1 = "updated" ]
+if [ "$1" = "updated" ]
 then
     openEditWindow
 else
