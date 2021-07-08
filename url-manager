@@ -12,11 +12,6 @@ Debug
 
 script=$0
 
-update() {
-    sleep 0.1s
-    $script "updated"
-}
-
 addData() {
     local top="$(head -n +3 $script)"
     local middle="$@"
@@ -159,6 +154,11 @@ openAddWindow() {
     else
         openEditWindow
     fi
+}
+
+update() {
+    sleep 0.1s
+    $script "updated"
 }
 
 if [ "$1" = "updated" ]
