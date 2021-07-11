@@ -1,14 +1,9 @@
 #!/bin/bash
-# WARNING: Functions addData(), removeData() and dataIndex() are dependent on the position of the data array (below)
-data=(
+
+data=( # WARNING: DO NOT CHANGE THIS LINE'S POSITION 
 "/data"
 )
 
-<< "Debug"
-notify() {
-    zenity --notification --text="$1"
-}
-Debug
 
 script=$0
 
