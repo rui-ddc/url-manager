@@ -1,117 +1,85 @@
 #!/bin/bash
 
-data=( # WARNING: DO NOT CHANGE THIS LINE'S POSITION 
-"/data"
-)
+MEMORY_DECLARATION_POSITION=4
+memory=( # WARNING: This line's position and MEMORY_DECLARATION_POSITION must be the same
+"")
 
-
+COLUMNS_IN_MEMORY=3
+COLUMNS_IN_DATA=3
 script=$0
 
-addData() {
-    local top="$(head -n +3 $script)"
-    local middle="$@"
-    local bottom="$(tail -n +4 $script)"
-    echo "$top"     > $script
-    echo "$middle" >> $script
-    echo "$bottom" >> $script
-}
-
-removeData() {
-    if [ $1 ]
-    then
-        echo "$(sed $1d $script)" > $script
-    fi
-}
-
-dataIndex() {
-    listData
-    local i=0
-    for elem in "${list[@]}"
-    do
-        if [ $(($i % 3)) -eq 1 ]
-        then
-            id="$elem"
-        elif [ $(($i % 3)) -eq 2 ]
-        then
-            id+="|$elem"
-            if [ "$id" = "$1" ]
-            then
-                echo $((($i + 10) / 3))
-            fi
-        fi
-        ((i++))
-    done
-}
-
-createEntryWindow() {
-    zenity --entry                     \
-           --title        "URL Manager"\
-           --text         ""           \
-           --entry-text   "Enter Key"  \
-           --cancel-label Quit         \
-           --ok-label     Enter        \
-           --extra-button Edit
-}
-
-listData() {
-    local i=0
-    list=()
-    for elem in "${data[@]}"
-    do
-        if [ ! $(($i % 4)) -eq 0 ]
-        then
-            list+=("$elem")
-        fi
-        ((i++))
-    done
-}
-
-createListWindow() {
-    listData
-    zenity --list                       \
-           --radiolist\
+createMainWindow() {
+    zenity --entry                      \
            --title        "URL Manager" \
-           --text         "List of Keys"\
-           --column       ""\
-           --column       Key           \
-           --column       Description   \
-           "${list[@]}"                 \
-           --print-column ALL           \
-           --cancel-label Back          \
-           --ok-label     Remove        \
-           --extra-button Add
+           --text         ""            \
+           --entry-text   "Enter Key"   \
+           --cancel-label "Quit"        \
+           --ok-label     "Enter"       \
+           --extra-button "Edit"
 }
 
-creatFormsWindow() {
-    zenity --forms                  \
-           --title     "URL Manager"\
-	       --text      ""           \
-           --separator "\" \""      \
-           --add-entry URL          \
-           --add-entry Key          \
-           --add-entry Description
+readMemory() {
+    data=()
+    local pos=1
+    for value in "${memory[@]}"
+    do
+        if [ $(($pos % $COLUMNS_IN_MEMORY)) -eq 1 ]
+        then
+            data+=("FALSE")
+        else
+            data+=("$value")
+        fi
+        ((pos++))
+    done
+}
+
+createEditWindow() {
+    readMemory
+    zenity --list                        \
+           --radiolist                   \
+           --title        "URL Manager"  \
+           --text         "List of Keys" \
+           --column       ""             \
+           --column       "Key"          \
+           --column       "Description"  \
+           "${data[@]}"                  \
+           --print-column "ALL"          \
+           --cancel-label "Back"         \
+           --ok-label     "Remove"       \
+           --extra-button "Add"
+}
+
+createAddWindow() {
+    zenity --forms                   \
+           --title     "URL Manager" \
+	       --text      ""            \
+           --separator "\" \""       \
+           --add-entry "URL"         \
+           --add-entry "Key"         \
+           --add-entry "Description"
 }
 
 openURL() {
-    local i=0
-    for elem in "${data[@]}"
+    local URL
+    local pos=1
+    for value in "${memory[@]}"
     do
-        if [ $(($i % 4)) -eq 1 ]
+        if [ $(($pos % $COLUMNS_IN_MEMORY)) -eq 1 ]
         then
-            url="$elem"
-        elif [ $(($i % 4)) -eq 2 ]
+            URL="$value"
+        elif [ $(($pos % $COLUMNS_IN_MEMORY)) -eq 2 ]
         then
-            if [ "${1^^}" = "${elem^^}" ]
+            if [ "${1^^}" = "${value^^}" ]
             then
-                xdg-open "$url"
+                xdg-open "$URL"
             fi
         fi
-        ((i++))
+        ((pos++))
     done
 }
 
 openMainWindow() {
-    value=$( createEntryWindow )
+    value=$( createMainWindow )
     status=$?
 
     if [ "$value" = "Edit" ]
@@ -123,40 +91,79 @@ openMainWindow() {
     fi
 }
 
+memoryPosition() {
+    readMemory
+    local id
+    local pos=1
+    for value in "${data[@]}"
+    do
+        if [ $(($pos % $COLUMNS_IN_DATA)) -eq 2 ]
+        then
+            id="$value"
+        elif [ $(($pos % $COLUMNS_IN_DATA)) -eq 0 ]
+        then
+            id+="|$value"
+            if [ "$id" = "$1" ]
+            then
+                zenity --info --text $( memoryPosition "$script" )
+                echo $(((($pos) / $COLUMNS_IN_DATA) + $MEMORY_DECLARATION_POSITION))
+            fi
+        fi
+        ((pos++))
+    done
+}
+
+deleteFromMemory() {
+    if [ $1 ]
+    then
+        echo "$(sed $1d $script)" > $script
+    fi
+}
+
+reload() {
+    sleep 0.1s
+    $script "reloaded"
+}
+
 openEditWindow() {
-    value=$( createListWindow )
+    value=$( createEditWindow )
     status=$?
 
+    local memPos
     if [ "$value" = "Add" ]
     then
         openAddWindow
-    elif [ "$status" = "0" ]
+    elif [ $status -eq 0 ]
     then
-        index=$( dataIndex "$value" )
-        removeData $index & update
+        memPos=$( memoryPosition "$value" )
+        deleteFromMemory $memPos & reload
     else
         openMainWindow
     fi
 }
 
+saveToMemory() {
+    local top="$(head -n +$MEMORY_DECLARATION_POSITION $script)"
+    local middle="$@"
+    local bottom="$(tail -n +$(($MEMORY_DECLARATION_POSITION + 1)) $script)"
+    echo "$top"     > $script
+    echo "$middle" >> $script
+    echo "$bottom" >> $script
+}
+
 openAddWindow() {
-    value=$( creatFormsWindow )
+    value=$( createAddWindow )
     status=$?
 
     if [ $status -eq 0 ]
     then
-        addData "\"FALSE\" \"$value\" \\" & update
+        saveToMemory "\"$value\" \\" & reload
     else
         openEditWindow
     fi
 }
 
-update() {
-    sleep 0.1s
-    $script "updated"
-}
-
-if [ "$1" = "updated" ]
+if [ "$1" = "reloaded" ]
 then
     openEditWindow
 else
