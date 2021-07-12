@@ -18,21 +18,6 @@ createMainWindow() {
            --extra-button "Edit"
 }
 
-readMemory() {
-    list=()
-    local pos=1
-    for value in "${memory[@]}"
-    do
-        if [ $(($pos % $COLUMNS_IN_MEMORY)) -eq 1 ]
-        then
-            list+=("FALSE")
-        else
-            list+=("$value")
-        fi
-        ((pos++))
-    done
-}
-
 createEditWindow() {
     readMemory
     zenity --list                        \
@@ -59,25 +44,6 @@ createAddWindow() {
            --add-entry "Description"
 }
 
-openURL() {
-    local URL
-    local pos=1
-    for value in "${memory[@]}"
-    do
-        if [ $(($pos % $COLUMNS_IN_MEMORY)) -eq 1 ]
-        then
-            URL="$value"
-        elif [ $(($pos % $COLUMNS_IN_MEMORY)) -eq 2 ]
-        then
-            if [ "${1^^}" = "${value^^}" ]
-            then
-                xdg-open "$URL"
-            fi
-        fi
-        ((pos++))
-    done
-}
-
 openMainWindow() {
     value=$( createMainWindow )
     status=$?
@@ -89,6 +55,66 @@ openMainWindow() {
     then
         openURL "$value"
     fi
+}
+
+openEditWindow() {
+    value=$( createEditWindow )
+    status=$?
+
+    local memPos
+    if [ "$value" = "Add" ]
+    then
+        openAddWindow
+    elif [ $status -eq 0 ]
+    then
+        memPos=$( memoryPosition "$value" )
+        deleteFromMemory $memPos & reload
+    else
+        openMainWindow
+    fi
+}
+
+openAddWindow() {
+    value=$( createAddWindow )
+    status=$?
+
+    if [ $status -eq 0 ]
+    then
+        saveToMemory "\"$value\" \\" & reload
+    else
+        openEditWindow
+    fi
+}
+
+saveToMemory() {
+    local top="$(head -n +$MEMORY_DECLARATION_POSITION $script)"
+    local middle="$@"
+    local bottom="$(tail -n +$(($MEMORY_DECLARATION_POSITION + 1)) $script)"
+    echo "$top"     > $script
+    echo "$middle" >> $script
+    echo "$bottom" >> $script
+}
+
+deleteFromMemory() {
+    if [ $1 ]
+    then
+        echo "$(sed $1d $script)" > $script
+    fi
+}
+
+readMemory() {
+    list=()
+    local pos=1
+    for value in "${memory[@]}"
+    do
+        if [ $(($pos % $COLUMNS_IN_MEMORY)) -eq 1 ]
+        then
+            list+=("FALSE")
+        else
+            list+=("$value")
+        fi
+        ((pos++))
+    done
 }
 
 memoryPosition() {
@@ -113,54 +139,28 @@ memoryPosition() {
     done
 }
 
-deleteFromMemory() {
-    if [ $1 ]
-    then
-        echo "$(sed $1d $script)" > $script
-    fi
+openURL() {
+    local URL
+    local pos=1
+    for value in "${memory[@]}"
+    do
+        if [ $(($pos % $COLUMNS_IN_MEMORY)) -eq 1 ]
+        then
+            URL="$value"
+        elif [ $(($pos % $COLUMNS_IN_MEMORY)) -eq 2 ]
+        then
+            if [ "${1^^}" = "${value^^}" ]
+            then
+                xdg-open "$URL"
+            fi
+        fi
+        ((pos++))
+    done
 }
 
 reload() {
     sleep 0.1s
     $script "reloaded"
-}
-
-openEditWindow() {
-    value=$( createEditWindow )
-    status=$?
-
-    local memPos
-    if [ "$value" = "Add" ]
-    then
-        openAddWindow
-    elif [ $status -eq 0 ]
-    then
-        memPos=$( memoryPosition "$value" )
-        deleteFromMemory $memPos & reload
-    else
-        openMainWindow
-    fi
-}
-
-saveToMemory() {
-    local top="$(head -n +$MEMORY_DECLARATION_POSITION $script)"
-    local middle="$@"
-    local bottom="$(tail -n +$(($MEMORY_DECLARATION_POSITION + 1)) $script)"
-    echo "$top"     > $script
-    echo "$middle" >> $script
-    echo "$bottom" >> $script
-}
-
-openAddWindow() {
-    value=$( createAddWindow )
-    status=$?
-
-    if [ $status -eq 0 ]
-    then
-        saveToMemory "\"$value\" \\" & reload
-    else
-        openEditWindow
-    fi
 }
 
 if [ "$1" = "reloaded" ]
