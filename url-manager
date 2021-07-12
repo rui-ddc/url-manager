@@ -37,7 +37,7 @@ createEditWindow() {
 createAddWindow() {
     zenity --forms                   \
            --title     "URL Manager" \
-	   --text      ""            \
+           --text      ""            \
            --separator "\" \""       \
            --add-entry "URL"         \
            --add-entry "Key"         \
