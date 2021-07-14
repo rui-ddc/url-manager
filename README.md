@@ -34,7 +34,7 @@ Edit   | Edit Window
 Button | Action
 -------| -------------------
 Back   | Main Window
-Remove | Remove selected Key
+Remove | Remove selected URL
 Add    | Add Window
 
 <br><br />
