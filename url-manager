@@ -2,7 +2,7 @@
 
 MEMORY_DECLARATION_POSITION=4
 memory=( # WARNING: This line's position and MEMORY_DECLARATION_POSITION must be the same
-"")
+)
 
 COLUMNS_IN_MEMORY=3
 COLUMNS_IN_LIST=3
@@ -11,8 +11,7 @@ script=$0
 createMainWindow() {
     zenity --entry                      \
            --title        "URL Manager" \
-           --text         ""            \
-           --entry-text   "Enter Key"   \
+           --text         "Enter a Key" \
            --cancel-label "Quit"        \
            --ok-label     "Enter"       \
            --extra-button "Edit"
