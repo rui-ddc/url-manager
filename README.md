@@ -17,5 +17,32 @@ Shortcut: Ctrl+u
 You can now open url-manager by pressing <kbd>Ctrl</kbd> + <kbd>u</kbd>.
 
 ## Instructions
-Under construction...
-<!-- Insert url-manager images -->
+### Main Window
+![main-window](https://github.com/rui-ddc/url-manager/blob/main/images/main-window.png)
+
+Button | Action
+-------| -------------------
+Quit   | Quit URL Manager
+Enter  | Open URL
+Edit   | Edit Window
+
+<br><br />
+
+### Edit Window
+![edit-window](https://github.com/rui-ddc/url-manager/blob/main/images/edit-window.png)
+
+Button | Action
+-------| -------------------
+Back   | Main Window
+Remove | Remove selected Key
+Add    | Add Window
+
+<br><br />
+
+### Add Window
+![add-window](https://github.com/rui-ddc/url-manager/blob/main/images/add-window.png)
+
+Button | Action
+-------| -------------------
+Cancel | Edit Window
+Ok     | Add new URL
