@@ -3,7 +3,10 @@
 ## Setup (for Ubuntu)
 Download the **url-manager** file.<br />
 Open a terminal and change directory to the current file location.<br />
-Move the file to `/opt/scripts/` with the following command:
+Move the file to `/opt/scripts/` with the following commands:
+```
+sudo mkdir /opt/scripts/
+```
 ```
 sudo mv url-manager /opt/scripts/
 ```
