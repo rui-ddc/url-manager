@@ -14,7 +14,7 @@ Go to `Settings > Keyboard Shortcuts`.<br />
 Create a *Custom Shortcut* with the following configuration:
 ```
 Name:     url-manager
-Command:  /opt/scripts/url-manager
+Command:  bash /opt/scripts/url-manager
 Shortcut: Ctrl+u
 ```
 You can now open url-manager by pressing <kbd>Ctrl</kbd> + <kbd>u</kbd>.
